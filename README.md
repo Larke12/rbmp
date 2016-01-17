@@ -10,7 +10,7 @@ The main idea behind rbmp is to update the GUI to GTK3 and give the Linux user a
 
 The original program can be run (with Ruby GTK2) via
 
-'ruby kesievchiefs-0.4.rb'
+`ruby kesievchiefs-0.4.rb`
 
 ## Credits & Dependencies
 
