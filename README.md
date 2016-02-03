@@ -4,7 +4,7 @@ Based off of KesieV Chiefs, a Ruby Media Player in 300 lines of code.
 
 ## Purpose
 
-The main idea behind rbmp is to update the GUI to GTK3 and give the Linux user access to their iTunes Library XML file. This means that you could access the same music, playlists, and update that same information from Linux.
+The main idea behind rbmp is to update the GUI to GTK3 and give the GNU/Linux and POSIX compliant user access to their iTunes Library XML file. This means that you could access the same music, playlists, and update that same information from Linux. This application will be designed following the new [X-App guidelines](http://segfault.linuxmint.com/2016/02/the-first-two-x-apps-are-ready/).
 
 ## Running
 
