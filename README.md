@@ -15,3 +15,9 @@ The original program can be run (with Ruby GTK2) via
 ## Credits & Dependencies
 
 For now, check the [original website](http://www.kesiev.com/kesievchiefs/).
+
+## Other Notes
+- [Using .glade with Ruby](http://stackoverflow.com/questions/32116885/ruby-gtk-app-done-correctly)
+- [Using Glade .xml with Ruby](https://gist.github.com/gpr/3512c3e66022249c833f)
+- [iTunes Library File Format](http://fileformats.archiveteam.org/wiki/ITunes_Music_Library)
+- [Apple's Developer Noted on XML](https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/PropertyLists/UnderstandXMLPlist/UnderstandXMLPlist.html)
