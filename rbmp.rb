@@ -86,13 +86,10 @@ $toolbar=[{:id=>:refresh,:icon=>Gtk::Stock::REFRESH, :verifyer=>Proc.new {!$sect
 
 class Mplayer
 	attr_accessor :state , :meta, :features, :voidmeta
-	@@LASTFM={:login=>"http://ws.audioscrobbler.com/radio/handshake.php?version=1.1.1&platform=linux&username=%s&passwordmd5=%s&debug=0&partner=",:tune=>"http://ws.audioscrobbler.com/radio/adjust.php?session=%s&url=%s&debug=0",:info=>"http://ws.audioscrobbler.com/radio/np.php?session=%s&debug=0",:command=>"http://ws.audioscrobbler.com/radio/control.php?session=%s&command=%s&debug=0",}
   
 	def resetmeta(metadata={}) @meta=voidmeta.merge(metadata) end
 	def connect_meta(&blk) @action=blk end
 	def connect_runtime(&blk) @runtime=blk end
-	def connect_lastfmaction(&blk) @lastfmaction=blk end
-  	def backgroundupdate; if @@LASTFM && @meta[:file][0..5]=="lastfm" && @lastfmdata[:session] && @meta[:title]!="" && ((@lc=(@lc+1)%1500)==0) then open(@@LASTFM[:info] % [ @lastfmdata[:session] ]) { |f| f.each { |line| {/^artist=(.*)/ => :artist, /^track=(.*)/ => :title,/^album=(.*)/ => :album,/^albumcover_small=(.*)/ => :cover,/^track_url=(.*)/ => :url}.each {|k,v| setmeta(v,(v==:cover && line[/\/noimage\//]? nil : line[k,1])) if line[k]} } } end end
 
 	def setmeta(v1=nil,v2=nil)
 	    if v1 then oldmeta , @meta[v1] = @meta[v1] , v2 else @state=v2 end
