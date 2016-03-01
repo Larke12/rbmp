@@ -94,11 +94,6 @@ class Mplayer
 	def connect_lastfmaction(&blk) @lastfmaction=blk end
   	def backgroundupdate; if @@LASTFM && @meta[:file][0..5]=="lastfm" && @lastfmdata[:session] && @meta[:title]!="" && ((@lc=(@lc+1)%1500)==0) then open(@@LASTFM[:info] % [ @lastfmdata[:session] ]) { |f| f.each { |line| {/^artist=(.*)/ => :artist, /^track=(.*)/ => :title,/^album=(.*)/ => :album,/^albumcover_small=(.*)/ => :cover,/^track_url=(.*)/ => :url}.each {|k,v| setmeta(v,(v==:cover && line[/\/noimage\//]? nil : line[k,1])) if line[k]} } } end end
 
-	def initialize(lastfmuser="",lastfmpassword="")
-	  @pipe, @thread, @action, @runtime, @lastfmaction, @lc, @features, @state, @lastfmdata, @voidmeta = nil, nil, nil, nil, nil, nil, {:formats=>[".mp3",".ogg"]}, [:stop,:byhand], {:session=>nil,:url=>nil,:user=>lastfmuser,:password=>lastfmpassword}, {:title=>$opt[:unknown], :artist=>$opt[:unknown], :album=>$opt[:unknown] }
-		resetmeta
-	end
-
 	def setmeta(v1=nil,v2=nil)
 	    if v1 then oldmeta , @meta[v1] = @meta[v1] , v2 else @state=v2 end
 		if @action && (!v1 || oldmeta!=v2) then @action.call self end  
@@ -107,9 +102,6 @@ class Mplayer
 	def startup(file,metadata,indexonly)
 		control(:stop,:byhand) if @state[0]!=:stop
 		resetmeta(metadata.merge({:file=>file}))
-		# Sleeping helps lastfm's np.php service to keep updated - probably waits that the last playback is fully closed server side.
-		if @@LASTFM && @meta[:file][0..5]=="lastfm" && @lastfmdata[:user]!="" && sleep(1) then open(@@LASTFM[:login] % [ @lastfmdata[:user], Digest::MD5.hexdigest(@lastfmdata[:password]) ]) { |f| f.each { |line| {:session=>/^session=(.*)/,:url=>/^stream_url=(.*)/}.each{ |i,r|  @lastfmdata[i]=line[r,1] if line[r] } } } end 
-	  if @@LASTFM && @meta[:file][0..5]=="lastfm" && @lastfmdata[:session] then open(@@LASTFM[:tune] % [ @lastfmdata[:session], file ]) { |f| f.each { |line| setmeta(:title,"LastFM: "+line[/^stationname=(.*)/,1].strip) if line[/^stationname=/]  }  } end
   	if !indexonly && @meta[:file].to_s[0..0]=="/" && (fname=Dir.new(File.dirname(@meta[:file])).select {|item| item[/cover/i] && (item[/\.jpg$/i] || item[/\.png$/i] || item[/\.bmp$/i])}.first) then setmeta(:cover,File.dirname(@meta[:file])+"/"+fname) end
 		@lc=1450
 	end
