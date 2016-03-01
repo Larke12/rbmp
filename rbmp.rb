@@ -1,12 +1,13 @@
 #!/usr/bin/ruby
 
-require 'gtk2'
+require 'gtk3'
 require 'find'
 require 'open-uri'
 require 'digest/md5'
 require 'webrick'
 require 'rexml/document'
 require 'yaml'
+require 'nokogiri'
 begin $notifies=require 'rnotify'; rescue LoadError; end
 
 # Numcols (numeric columns)
