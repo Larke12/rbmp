@@ -7,7 +7,6 @@ require 'digest/md5'
 require 'webrick'
 require 'rexml/document'
 require 'yaml'
-require 'nokogiri'
 begin $notifies=require 'rnotify'; rescue LoadError; end
 
 # Numcols (numeric columns)
@@ -86,10 +85,18 @@ $toolbar=[{:id=>:refresh,:icon=>Gtk::Stock::REFRESH, :verifyer=>Proc.new {!$sect
 
 class Mplayer
 	attr_accessor :state , :meta, :features, :voidmeta
+	@@LASTFM={:login=>"http://ws.audioscrobbler.com/radio/handshake.php?version=1.1.1&platform=linux&username=%s&passwordmd5=%s&debug=0&partner=",:tune=>"http://ws.audioscrobbler.com/radio/adjust.php?session=%s&url=%s&debug=0",:info=>"http://ws.audioscrobbler.com/radio/np.php?session=%s&debug=0",:command=>"http://ws.audioscrobbler.com/radio/control.php?session=%s&command=%s&debug=0",}
   
 	def resetmeta(metadata={}) @meta=voidmeta.merge(metadata) end
 	def connect_meta(&blk) @action=blk end
 	def connect_runtime(&blk) @runtime=blk end
+	def connect_lastfmaction(&blk) @lastfmaction=blk end
+  	def backgroundupdate; if @@LASTFM && @meta[:file][0..5]=="lastfm" && @lastfmdata[:session] && @meta[:title]!="" && ((@lc=(@lc+1)%1500)==0) then open(@@LASTFM[:info] % [ @lastfmdata[:session] ]) { |f| f.each { |line| {/^artist=(.*)/ => :artist, /^track=(.*)/ => :title,/^album=(.*)/ => :album,/^albumcover_small=(.*)/ => :cover,/^track_url=(.*)/ => :url}.each {|k,v| setmeta(v,(v==:cover && line[/\/noimage\//]? nil : line[k,1])) if line[k]} } } end end
+
+	def initialize(lastfmuser="",lastfmpassword="")
+	  @pipe, @thread, @action, @runtime, @lastfmaction, @lc, @features, @state, @lastfmdata, @voidmeta = nil, nil, nil, nil, nil, nil, {:formats=>[".mp3",".ogg"]}, [:stop,:byhand], {:session=>nil,:url=>nil,:user=>lastfmuser,:password=>lastfmpassword}, {:title=>$opt[:unknown], :artist=>$opt[:unknown], :album=>$opt[:unknown] }
+		resetmeta
+	end
 
 	def setmeta(v1=nil,v2=nil)
 	    if v1 then oldmeta , @meta[v1] = @meta[v1] , v2 else @state=v2 end
@@ -99,6 +106,9 @@ class Mplayer
 	def startup(file,metadata,indexonly)
 		control(:stop,:byhand) if @state[0]!=:stop
 		resetmeta(metadata.merge({:file=>file}))
+		# Sleeping helps lastfm's np.php service to keep updated - probably waits that the last playback is fully closed server side.
+		if @@LASTFM && @meta[:file][0..5]=="lastfm" && @lastfmdata[:user]!="" && sleep(1) then open(@@LASTFM[:login] % [ @lastfmdata[:user], Digest::MD5.hexdigest(@lastfmdata[:password]) ]) { |f| f.each { |line| {:session=>/^session=(.*)/,:url=>/^stream_url=(.*)/}.each{ |i,r|  @lastfmdata[i]=line[r,1] if line[r] } } } end 
+	  if @@LASTFM && @meta[:file][0..5]=="lastfm" && @lastfmdata[:session] then open(@@LASTFM[:tune] % [ @lastfmdata[:session], file ]) { |f| f.each { |line| setmeta(:title,"LastFM: "+line[/^stationname=(.*)/,1].strip) if line[/^stationname=/]  }  } end
   	if !indexonly && @meta[:file].to_s[0..0]=="/" && (fname=Dir.new(File.dirname(@meta[:file])).select {|item| item[/cover/i] && (item[/\.jpg$/i] || item[/\.png$/i] || item[/\.bmp$/i])}.first) then setmeta(:cover,File.dirname(@meta[:file])+"/"+fname) end
 		@lc=1450
 	end
@@ -301,7 +311,7 @@ $artists.append_column( Gtk::TreeViewColumn.new("Artist",Gtk::CellRendererText.n
 $albums.append_column(Gtk::TreeViewColumn.new("Album",Gtk::CellRendererText.new,:text=>0))
 
 # coverbox
-($coverbox=Gtk::IconView.new($albumslist).set_text_column(0).set_pixbuf_column(1)).signal_connect("selection-changed") { |me| me.selected_each {|iconview,path| $curalbum,$lookup.text=$albumslist.get_iter(path)[0],"";updatesongs } }
+#($coverbox=Gtk::IconView.new($albumslist).set_text_column(0).set_pixbuf_column(1)).signal_connect("selection-changed") { |me| me.selected_each {|iconview,path| $curalbum,$lookup.text=$albumslist.get_iter(path)[0],"";updatesongs } }
 
 # songlist
 $songslist = Gtk::ListStore.new(String,String,String,Fixnum,Fixnum,String,String,String,String,Fixnum,Fixnum)
@@ -330,8 +340,8 @@ $modes.columns[1].set_cell_data_func(renderer) { |col, renderer, model, iter| re
 $modes.signal_connect("cursor-changed") { |me| setmode($lists[me.selection.selected.set_value(1,0).get_value(3)]) if me.selection.selected }
 
 ($window = Gtk::Window.new).signal_connect("destroy") { Gtk.main_quit }
-$window.set_title("KesieV Chiefs").add(body=Gtk::VBox.new).set_default_size($opt[:width].to_i, $opt[:height].to_i).signal_connect('delete_event') { !shutdown(:fromwindow) }
-body.pack_start(menubar = Gtk::MenuBar.new,false,false).pack_start($toolBar = Gtk::Toolbar.new, false, false).pack_end(($statbar=Gtk::Statusbar.new).pack_end($progress=Gtk::ProgressBar.new,false,false),false,true,0) << (($mainbox=Gtk::VPaned.new) << boxit($coverbox) << ( Gtk::HPaned.new << (side=Gtk::VBox.new(false,5).pack_end($cover = Gtk::Image.new, false, false) << boxit($modes).set_policy(Gtk::POLICY_NEVER,Gtk::POLICY_AUTOMATIC)) << (($vp=Gtk::VPaned.new) << (Gtk::HBox.new(true,5) << ($arb=boxit($artists).set_policy(Gtk::POLICY_NEVER,Gtk::POLICY_AUTOMATIC)) << ($alb=boxit($albums).set_policy(Gtk::POLICY_NEVER,Gtk::POLICY_AUTOMATIC))) << (Gtk::VBox.new(false,5).pack_start((Gtk::HBox.new(false,5).set_border_width(1).pack_start($sectionlabel=Gtk::Label.new,false,true).pack_start(Gtk::Label.new,true,true).pack_start(Gtk::Label.new("Search"),false,true).pack_start($lookup=Gtk::Entry.new,false,false)),false,false) << boxit($songs) ) ) ))
+$window.set_title("KesieV Chiefs").add(body=Gtk::Box.new(false, 1)).set_default_size($opt[:width].to_i, $opt[:height].to_i).signal_connect('delete_event') { !shutdown(:fromwindow) }
+body.pack_start(menubar = Gtk::MenuBar.new,false,false).pack_start($toolBar = Gtk::Toolbar.new, false, false).pack_end(($statbar=Gtk::Statusbar.new).pack_end($progress=Gtk::ProgressBar.new,false,false),false,true,0) << (($mainbox=Gtk::VPaned.new) << boxit($coverbox) << ( Gtk::HPaned.new << (side=Gtk::Box.new(false,5).pack_end($cover = Gtk::Image.new, false, false) << boxit($modes).set_policy(Gtk::POLICY_NEVER,Gtk::POLICY_AUTOMATIC)) << (($vp=Gtk::VPaned.new) << (Gtk::HBox.new(true,5) << ($arb=boxit($artists).set_policy(Gtk::POLICY_NEVER,Gtk::POLICY_AUTOMATIC)) << ($alb=boxit($albums).set_policy(Gtk::POLICY_NEVER,Gtk::POLICY_AUTOMATIC))) << (Gtk::VBox.new(false,5).pack_start((Gtk::HBox.new(false,5).set_border_width(1).pack_start($sectionlabel=Gtk::Label.new,false,true).pack_start(Gtk::Label.new,true,true).pack_start(Gtk::Label.new("Search"),false,true).pack_start($lookup=Gtk::Entry.new,false,false)),false,false) << boxit($songs) ) ) ))
 
 ($tray=Gtk::StatusIcon.new.set_stock(Gtk::Stock::MEDIA_PLAY)).signal_connect("activate") { ($window.visible? ? $window.hide : $window.show) }
 ["insert_text","delete-from-cursor","backspace"].each { |m| $lookup.signal_connect(m) { if $lookupthread then $lookupthread.kill end; $lookupthread=Thread.new { sleep 1; updatesongs; $lookupthread=nil } } }
