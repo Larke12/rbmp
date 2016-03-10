@@ -7,6 +7,8 @@ require 'digest/md5'
 require 'webrick'
 require 'rexml/document'
 require 'yaml'
+#require 'gir_ffi'
+
 begin $notifies=require 'rnotify'; rescue LoadError; end
 
 # Numcols (numeric columns)
@@ -19,15 +21,18 @@ NUMCOLS, COLPVT, COLMAP, DATABASES, LABELS, $opt = [:trackno, :year], {:order=>9
 $opt.merge!({ :columns=>[:title,:artist,:album,:year,:trackno],:loadplugins=>[],:height=>600,:width=>600,:defaultentries=>true,:separator=>"#!#", :all=>"(All)", :unknown=>"Unknown", :serverport=>"12345", :iconsize=>15, :settings=>"#{$opt[:root]}/settings", :plugins=>"#{$opt[:root]}/plugins", :purple=>(%x[which purple-remote]!=""),:showcover=>true,:coverh=>105,:coverw=>105,:covers=>"#{$opt[:root]}/cover/", :coverbox=>true, :coverboxheight=>150, :coverboxh=>105, :coverboxw=>105,:filterheight=>100,:lastfmuser=>"", :lastfmpass=>"", :musicroot=>"#{ENV['HOME']}/Music/" })
 
 # Reads settings
-if File.exist?($opt[:settings]) && (configdata=YAML::load_file($opt[:settings])) && configdata[:opt] then $opt.merge!(configdata[:opt]).each_key { |k| $opt[k].gsub!(/\{[^}]*\}/) { |pattern| ENV[pattern[1..-2]] } if $opt[k].class==String } end 
+if File.exist?($opt[:settings]) && (configdata=YAML::load_file($opt[:settings])) && configdata[:opt] 
+	then $opt.merge!(configdata[:opt]).each_key { 
+		|k| $opt[k].gsub!(/\{[^}]*\}/) { |pattern| ENV[pattern[1..-2]] } if $opt[k].class==String } 
+end 
 
 # built in lists	
 $lists=[ {:label=>"Music",:root=>"#{$opt[:musicroot]}",:artists=>"#{$opt[:root]}/artists", :albums=>"#{$opt[:root]}/albums",:file=>"#{$opt[:root]}/songs"},
-	{:label=>"Radio streams", :file=>"#{$opt[:root]}/streams",:backend=>"http://www.shoutcast.com/",:rename=>"_scurl.*\">(.*)<" ,:redata=>"(\\/sbin\\/shoutcast-playlist\\.pls\\?rn=[0-9]*&file=filename\\.pls)", :prefix=>"http://www.shoutcast.com"},
-	{:label=>"TVs", :file=>"#{$opt[:root]}/tvs",:backend=>"http://wwitv.com/television/104.htm",:rename=>"target=\"TV\">(.*)<\\/a>.*" ,:redata=>"listen\\(.*','(.*\\.asx)'," },
-	{:label=>"LastFM Stations", :file=>"#{$opt[:root]}/lastfm",:backend=>"http://www.lastfm.com/music/+tags/",:rename=>"style=\"font-size.*href[^>]*>([^<]*)" ,:redata=>"style=\"font-size.*href=\"\\/tag\\/([^\"]*)",:prefix=>"lastfm://globaltags/", :encodeurl=>true},	
+	#{:label=>"Radio streams", :file=>"#{$opt[:root]}/streams",:backend=>"http://www.shoutcast.com/",:rename=>"_scurl.*\">(.*)<" ,:redata=>"(\\/sbin\\/shoutcast-playlist\\.pls\\?rn=[0-9]*&file=filename\\.pls)", :prefix=>"http://www.shoutcast.com"},
+	#{:label=>"TVs", :file=>"#{$opt[:root]}/tvs",:backend=>"http://wwitv.com/television/104.htm",:rename=>"target=\"TV\">(.*)<\\/a>.*" ,:redata=>"listen\\(.*','(.*\\.asx)'," },
+	#{:label=>"LastFM Stations", :file=>"#{$opt[:root]}/lastfm",:backend=>"http://www.lastfm.com/music/+tags/",:rename=>"style=\"font-size.*href[^>]*>([^<]*)" ,:redata=>"style=\"font-size.*href=\"\\/tag\\/([^\"]*)",:prefix=>"lastfm://globaltags/", :encodeurl=>true},	
 	($opt[:defaultentries] ? {:icon=>"connect_established",:label=>"#{ENV['USER']}'s Music",:protected=>true,:root=>"http://127.0.0.1:#{$opt[:serverport]}/",:file=>"http://127.0.0.1:#{$opt[:serverport]}/songs"} : nil) , # add your shares like this.
-	($opt[:defaultentries] ? {:label=>"Amplified podcast",:xml=>"http://feeds.feedburner.com/amplified"} : nil), # Basic podcast/rss support.
+	#($opt[:defaultentries] ? {:label=>"Amplified podcast",:xml=>"http://feeds.feedburner.com/amplified"} : nil), # Basic podcast/rss support.
 	($opt[:defaultentries] ? {:icon=>"emblem-favorite",:label=>"Favourites",:file=>"#{$opt[:root]}/favourites"} : nil ) # Here comes the custom playlists! Add lines like this for more custom playlists.
 ].compact
 
@@ -93,10 +98,12 @@ class Mplayer
 	def connect_lastfmaction(&blk) @lastfmaction=blk end
   	def backgroundupdate; if @@LASTFM && @meta[:file][0..5]=="lastfm" && @lastfmdata[:session] && @meta[:title]!="" && ((@lc=(@lc+1)%1500)==0) then open(@@LASTFM[:info] % [ @lastfmdata[:session] ]) { |f| f.each { |line| {/^artist=(.*)/ => :artist, /^track=(.*)/ => :title,/^album=(.*)/ => :album,/^albumcover_small=(.*)/ => :cover,/^track_url=(.*)/ => :url}.each {|k,v| setmeta(v,(v==:cover && line[/\/noimage\//]? nil : line[k,1])) if line[k]} } } end end
 
+=begin
 	def initialize(lastfmuser="",lastfmpassword="")
 	  @pipe, @thread, @action, @runtime, @lastfmaction, @lc, @features, @state, @lastfmdata, @voidmeta = nil, nil, nil, nil, nil, nil, {:formats=>[".mp3",".ogg"]}, [:stop,:byhand], {:session=>nil,:url=>nil,:user=>lastfmuser,:password=>lastfmpassword}, {:title=>$opt[:unknown], :artist=>$opt[:unknown], :album=>$opt[:unknown] }
 		resetmeta
 	end
+=end
 
 	def setmeta(v1=nil,v2=nil)
 	    if v1 then oldmeta , @meta[v1] = @meta[v1] , v2 else @state=v2 end
@@ -143,11 +150,23 @@ class Mplayer
   end
 end
 
-def surf(url) fork {`firefox "#{url}"`} end  
-def formatrecord(table,data=nil); DATABASES[(data ? table : :file)].collect{|x| (data ? data : table)[x].to_s}.join($opt[:separator]) end
-def unformatrecord(table,data=nil); id, ret=-1,{}; (data ? data : table).rstrip.split($opt[:separator]).each{|x| ret[DATABASES[(data ? table : :file)][id+=1]]=x.rstrip }; ret end
-def getcovername(artist,album) $opt[:covers]+Digest::MD5.hexdigest(album+"|"+artist) end
-def boxit(obj) Gtk::ScrolledWindow.new.add(obj).set_hscrollbar_policy(Gtk::POLICY_AUTOMATIC) end
+def surf(url) 
+	fork {`google-chrome "#{url}"`} 
+end  
+def formatrecord(table,data=nil); 
+	DATABASES[(data ? table : :file)].collect{|x| (data ? data : table)[x].to_s}.join($opt[:separator]) 
+end
+def unformatrecord(table,data=nil); 
+	id, ret=-1,{}; (data ? data : table).rstrip.split($opt[:separator]).each{|x| ret[DATABASES[(data ? table : :file)][id+=1]]=x.rstrip }; ret 
+end
+def getcovername(artist,album) 
+	$opt[:covers]+Digest::MD5.hexdigest(album+"|"+artist)
+end
+#def boxit(obj) Gtk::ScrolledWindow.new.add(obj).set_hscrollbar_policy(Gtk::PolicyType::AUTOMATIC) end
+def boxit(obj) 
+	Gtk::ScrolledWindow.new.add(obj).set_hscrollbar_policy(Gtk::PolicyType::AUTOMATIC) 
+end
+
 
 def updatedatabase(section)
   databases={:artists=>[],:albums=>[],:file=>[]}
@@ -155,7 +174,7 @@ def updatedatabase(section)
 		if !FileTest.directory?(path) && $player.features[:formats].index(File.extname(path).downcase)!=nil
 			(data=Mplayer.new).play(path,{:title=>File.basename(path)},true).join			
 			data.meta[:file]=path[section[:root].length..-1]
-			databases.each_key { |k| databases[k]<<formatrecord(k,data.meta) if databases[k].index(formatrecord(k,data.meta)) == nil }
+			databases.each_key { |k| databases[k] << formatrecord(k,data.meta) if databases[k].index(formatrecord(k,data.meta)) == nil }
 		end
 	end
 	databases.each {|k,v| File.open(section[k],"w") { |f| (k==:file ? v : v.sort).each { |line| f.puts(line) } } }
@@ -340,8 +359,9 @@ $modes.columns[1].set_cell_data_func(renderer) { |col, renderer, model, iter| re
 $modes.signal_connect("cursor-changed") { |me| setmode($lists[me.selection.selected.set_value(1,0).get_value(3)]) if me.selection.selected }
 
 ($window = Gtk::Window.new).signal_connect("destroy") { Gtk.main_quit }
-$window.set_title("KesieV Chiefs").add(body=Gtk::Box.new(false, 1)).set_default_size($opt[:width].to_i, $opt[:height].to_i).signal_connect('delete_event') { !shutdown(:fromwindow) }
-body.pack_start(menubar = Gtk::MenuBar.new,false,false).pack_start($toolBar = Gtk::Toolbar.new, false, false).pack_end(($statbar=Gtk::Statusbar.new).pack_end($progress=Gtk::ProgressBar.new,false,false),false,true,0) << (($mainbox=Gtk::VPaned.new) << boxit($coverbox) << ( Gtk::HPaned.new << (side=Gtk::Box.new(false,5).pack_end($cover = Gtk::Image.new, false, false) << boxit($modes).set_policy(Gtk::POLICY_NEVER,Gtk::POLICY_AUTOMATIC)) << (($vp=Gtk::VPaned.new) << (Gtk::HBox.new(true,5) << ($arb=boxit($artists).set_policy(Gtk::POLICY_NEVER,Gtk::POLICY_AUTOMATIC)) << ($alb=boxit($albums).set_policy(Gtk::POLICY_NEVER,Gtk::POLICY_AUTOMATIC))) << (Gtk::VBox.new(false,5).pack_start((Gtk::HBox.new(false,5).set_border_width(1).pack_start($sectionlabel=Gtk::Label.new,false,true).pack_start(Gtk::Label.new,true,true).pack_start(Gtk::Label.new("Search"),false,true).pack_start($lookup=Gtk::Entry.new,false,false)),false,false) << boxit($songs) ) ) ))
+#$window.set_title("Ruby Media Player").add(body=Gtk::Box.new(:vertical, 1)).set_default_size($opt[:width].to_i, $opt[:height].to_i).signal_connect('delete_event') { !shutdown(:fromwindow) }
+$window.set_title("Ruby Media Player").add(body=Gtk::Box.new(:vertical, 1)) { !shutdown(:fromwindow) }
+body.pack_start(menubar = Gtk::MenuBar.new, :expand => false, :fill => false, :padding => 0).pack_start($toolBar = Gtk::Toolbar.new, :expand => false, :fill => false, :padding => 0).pack_end(($statbar=Gtk::Statusbar.new).pack_end($progress=Gtk::ProgressBar.new, :expand => false, :fill => false, :padding => 0), :expand => false, :fill => true, :padding => 0) << (($mainbox=Gtk::Paned.new(:vertical)) << boxit($coverbox).set_policy(Gtk::PolicyType::NEVER,Gtk::PolicyType::AUTOMATIC)) << ( Gtk::Paned.new(:horizontal) << (side=Gtk::Box.new(:vertical,5).pack_end($cover = Gtk::Image.new, :expand => false, :fill => false, :padding => 0) << boxit($modes).set_policy(Gtk::PolicyType::NEVER,Gtk::PolicyType::AUTOMATIC)) << (($vp=Gtk::Paned.new(:vertical)) << (Gtk::Box.new(:horizontal,5) << ($arb=boxit($artists).set_policy(Gtk::PolicyType::NEVER,Gtk::PolicyType::AUTOMATIC)) << ($alb=boxit($albums).set_policy(Gtk::PolicyType::NEVER,Gtk::PolicyType::AUTOMATIC))) << (Gtk::Box.new(:vertical,5).pack_start((Gtk::Box.new(:horizontal,5).set_border_width(1).pack_start($sectionlabel=Gtk::Label.new, :expand => false, :fill => true, :padding => 0).pack_start(Gtk::Label.new, :expand => true, :fill => true, :padding => 0).pack_start(Gtk::Label.new("Search"), :expand => false, :fill=> true, :padding => 0).pack_start($lookup=Gtk::Entry.new, :expand => false, :fill => false, :padding => 0)), :expand => false, :fill => false, :padding => 0) << boxit($songs).set_policy(Gtk::PolicyType::NEVER,Gtk::PolicyType::AUTOMATIC))))
 
 ($tray=Gtk::StatusIcon.new.set_stock(Gtk::Stock::MEDIA_PLAY)).signal_connect("activate") { ($window.visible? ? $window.hide : $window.show) }
 ["insert_text","delete-from-cursor","backspace"].each { |m| $lookup.signal_connect(m) { if $lookupthread then $lookupthread.kill end; $lookupthread=Thread.new { sleep 1; updatesongs; $lookupthread=nil } } }
@@ -350,30 +370,34 @@ Notify::init($window.title) if $notifies
 $window.show_all
 
 # Now everything is ready and can be overloaded/overwritten/updated. Loads plugin into the plugin folder
-if File.directory?($opt[:plugins]) then ($opt[:loadplugins] && $opt[:loadplugins].length>0 ? $opt[:loadplugins] : Dir.new($opt[:plugins])).each { |f| require($opt[:plugins]+"/"+f) if f[0..7]=="kplugin_" && File.extname(f)==".rb"} end
+if File.directory?($opt[:plugins]) 
+	then ($opt[:loadplugins] && $opt[:loadplugins].length>0 ? $opt[:loadplugins] : Dir.new($opt[:plugins])).each { |f| require($opt[:plugins]+"/"+f) if f[0..7]=="kplugin_" && File.extname(f)==".rb"} 
+end
+
 # Initializing all structures
 $player, $menuentries, menu, $rowcount, $toolbaritems, $covername = Mplayer.new($opt[:lastfmuser], $opt[:lastfmpass]), {}, {} , 0, {}, nil
 $player.connect_runtime { |current,length,perc,tot| $progress.set_text("#{current} of #{length}").set_fraction((tot>0 ? perc/tot : 0)) }
 $player.connect_lastfmaction { |action,result| $statbar.push($statbar.get_context_id("lastfm"),"#{action.to_s.capitalize} #{result=="ok" ? "done." : "gone wrong."}")}
 $player.connect_meta { |me|
 	if $notifythread then $notifythread.kill end
-  if me.state[0]==:stop then $progress.text, $progress.fraction , $label.text = "" , 0 , "Stopped." else $label.markup="<b>#{me.meta[:title]}</b>\nby <i>#{me.meta[:artist]}</i> from <i>#{me.meta[:album]}</i>#{me.state[0]==:pause ?" [PAUSED]" :""}" end 
+       	if me.state[0]==:stop then $progress.text, $progress.fraction , $label.text = "" , 0 , "Stopped." else $label.markup="<b>#{me.meta[:title]}</b>\nby <i>#{me.meta[:artist]}</i> from <i>#{me.meta[:album]}</i>#{me.state[0]==:pause ?" [PAUSED]" :""}" end 
 	if me.state[0]==:stop && me.state[1] != :byhand then nextsong end
 	$tray.tooltip, $notifythread = $window.title+"\n"+$label.text, Thread.new { sleep 4; notify(me) }
 }
-# Reads custom entries
-if File.exist?($opt[:settings]) && (configdata=YAML::load_file($opt[:settings])) && configdata[:lists] then $lists.concat(configdata[:lists]).collect { |item| item.each_key { |k| item[k].gsub!(/\{[^}]*\}/) { |pattern| ENV[pattern[1..-2]] } if item[k].class==String } } end
-# Generate implicit methods for builtin lists kinds
-generateimplicits
-# Create menus
-$menulist.each{|menuitem| menubar.append( ($menuentries[menuitem[:id]]=Gtk::MenuItem.new(menuitem[:label])).set_visible(true).set_submenu( (menu[menuitem[:id]]=Gtk::Menu.new).set_visible(true) ) ) }
-$menus.each_index { |idx| menu[$menus[idx][:menu]].append(itm=Gtk::MenuItem.new( $menus[idx][:label] ).set_visible(true));itm.signal_connect("activate") {$menus[idx][:action].call} }
-# Create the toolbar
-$toolbar.each {|i| if i[:sep] then $toolBar.append(Gtk::SeparatorToolItem.new.set_visible(true)) else $toolBar.append($toolbaritems[i[:id]]=Gtk::ToolButton.new(i[:icon])).set_visible(true).signal_connect("clicked") {i[:action].call} end }
-$toolBar.append(Gtk::HBox.new(false,5).set_border_width(5)<< ($smallcover = Gtk::Image.new) << ($label=Gtk::Label.new("Stopped.") )).show_all
-# Update the modes list
-updatemodes
 
-setmode($lists[0])
+# Reads custom entries
+#if File.exist?($opt[:settings]) && (configdata=YAML::load_file($opt[:settings])) && configdata[:lists] then $lists.concat(configdata[:lists]).collect { |item| item.each_key { |k| item[k].gsub!(/\{[^}]*\}/) { |pattern| ENV[pattern[1..-2]] } if item[k].class==String } } end
+# Generate implicit methods for builtin lists kinds
+#generateimplicits
+# Create menus
+#$menulist.each{|menuitem| menubar.append( ($menuentries[menuitem[:id]]=Gtk::MenuItem.new(menuitem[:label])).set_visible(true).set_submenu( (menu[menuitem[:id]]=Gtk::Menu.new).set_visible(true) ) ) }
+#$menus.each_index { |idx| menu[$menus[idx][:menu]].append(itm=Gtk::MenuItem.new( $menus[idx][:label] ).set_visible(true));itm.signal_connect("activate") {$menus[idx][:action].call} }
+# Create the toolbar
+#$toolbar.each {|i| if i[:sep] then $toolBar.append(Gtk::SeparatorToolItem.new.set_visible(true)) else $toolBar.append($toolbaritems[i[:id]]=Gtk::ToolButton.new(i[:icon])).set_visible(true).signal_connect("clicked") {i[:action].call} end }
+#$toolBar.append(Gtk::Box.new(:horizontal,5).set_border_width(5)<< ($smallcover = Gtk::Image.new) << ($label=Gtk::Label.new("Stopped.") )).show_all
+# Update the modes list
+#updatemodes
+
+#setmode($lists[0])
 
 Gtk.main
