@@ -1,22 +1,24 @@
 # rbmp -- Ruby Media Player
 
-Based off of KesieV Chiefs, a Ruby Media Player in 300 lines of code.
+Inspired by KesieV Chiefs, a Ruby Media Player in 300 lines of code.
 
 ## Purpose
 
-The main idea behind rbmp is to update the GUI to GTK3 and give the GNU/Linux and POSIX compliant user access to their iTunes Library XML file. This means that you could access the same music, playlists, and update that same information from Linux. This application will be designed following the new [X-App guidelines](http://segfault.linuxmint.com/2016/02/the-first-two-x-apps-are-ready/).
+The main purpose of RBMP is to create a GTK3 Media Player and give the GNU/Linux and POSIX compliant user access to their iTunes Library XML file. This means that you could access the same music and playlists from Linux. This application will be designed following the new [X-App guidelines](http://segfault.linuxmint.com/2016/02/the-first-two-x-apps-are-ready/).
 
 ## Running
 
-The original program can be run (with Ruby GTK2) via
-
-`ruby kesievchiefs-0.4.rb`
+`ruby rbmp.rb`
 
 ## Credits & Dependencies
 
-For now, check the [original website](http://www.kesiev.com/kesievchiefs/).
+This application currently requires the following gems 
+
+`gem install gtk3`
 
 ## Other Notes
+- [GTK+ Developer Docs](https://developer.gnome.org/gtk3/3.16/)
+- [Ruby/GNOME2 Bindings](https://github.com/ruby-gnome2/ruby-gnome2)
 - [Using .glade with Ruby](http://stackoverflow.com/questions/32116885/ruby-gtk-app-done-correctly)
 - [Using Glade .xml with Ruby](https://gist.github.com/gpr/3512c3e66022249c833f)
 - [iTunes Library File Format](http://fileformats.archiveteam.org/wiki/ITunes_Music_Library)
