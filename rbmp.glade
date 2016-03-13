@@ -182,6 +182,7 @@
                   <object class="GtkToolButton" id="rw-butt">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Previous</property>
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-media-previous</property>
                   </object>
@@ -194,6 +195,7 @@
                   <object class="GtkToolButton" id="play-butt">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Play</property>
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-media-play</property>
                   </object>
@@ -206,6 +208,7 @@
                   <object class="GtkToolButton" id="ff-butt">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Next</property>
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-media-next</property>
                   </object>
