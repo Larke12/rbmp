@@ -155,7 +155,7 @@ def updatedatabase(section)
 		if !FileTest.directory?(path) && $player.features[:formats].index(File.extname(path).downcase)!=nil
 			(data=Mplayer.new).play(path,{:title=>File.basename(path)},true).join			
 			data.meta[:file]=path[section[:root].length..-1]
-			databases.each_key { |k| databases[k]<<formatrecord(k,data.meta) if databases[k].index(formatrecord(k,data.meta)) == nil }
+			databases.each_key { |k| databases[k] << formatrecord(k,data.meta) if databases[k].index(formatrecord(k,data.meta)) == nil }
 		end
 	end
 	databases.each {|k,v| File.open(section[k],"w") { |f| (k==:file ? v : v.sort).each { |line| f.puts(line) } } }
@@ -375,5 +375,6 @@ $toolBar.append(Gtk::HBox.new(false,5).set_border_width(5)<< ($smallcover = Gtk:
 updatemodes
 
 setmode($lists[0])
+
 
 Gtk.main
