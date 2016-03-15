@@ -26,8 +26,15 @@ quit.signal_connect "activate" do
 	Gtk.main_quit
 end
 
-# Initialize About Dialog
+# Initialize Dialogs
+open_file_dial = builder.get_object("open_file_dial")
 about_dial = builder.get_object("about_dial")
+
+# Connect Open File Dialog to open button
+open_dial = builder.get_object("open_dial")
+open_dial.signal_connect "activate" do
+	open_file_dial.run
+end
 
 # Connect About Dialog to menu button
 menu_about = builder.get_object("menu_about")
