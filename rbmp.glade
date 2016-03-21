@@ -368,7 +368,7 @@ See the &lt;a href="http://www.gnu.org/licenses/gpl-3.0.html"&gt;GNU General Pub
         <property name="orientation">vertical</property>
         <property name="spacing">2</property>
         <child internal-child="action_area">
-          <object class="GtkButtonBox" id="aboutdialog-action_area">
+          <object class="GtkButtonBox" id="about_button_box">
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
           </object>

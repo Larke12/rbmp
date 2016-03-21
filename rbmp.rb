@@ -50,6 +50,14 @@ menu_about.signal_connect "activate" do
 	about_dial.run
 end
 
+# Connect About Dialog button box to buttons
+about_button_box = builder.get_object("about_button_box")
+close_butt = Gtk::Button.new(:label => "Close")
+about_button_box.add(close_butt)
+close_butt.signal_connect "activate"  do
+	about_dial.destroy
+end
+
 # Populate Tree view
 # http://python-gtk-3-tutorial.readthedocs.org/en/latest/treeview.html
 
