@@ -1,14 +1,6 @@
 #!/usr/bin/ruby
 
 require 'gtk3'
-#require 'find'
-#require 'open-uri'
-#require 'digest/md5'
-#require 'webrick'
-#require 'rexml/document'
-#require 'yaml'
-#require 'nokogiri'
-#require 'gir_ffi'
 
 begin $notifies=require 'rnotify'; rescue LoadError; end
 
@@ -31,8 +23,8 @@ open_file_dial = builder.get_object("open_file_dial")
 about_dial = builder.get_object("about_dial")
 
 # Initialize List and Tree stores
-tree_store = builder.get_object("tree_store")
-list_store = builder.get_object("list_store")
+tree_store = builder.get_object("tree_store") # Side bar: sections
+list_store = builder.get_object("list_store") # Main box: songs
 
 # Initialize Tree views
 tree_view = builder.get_object("tree_view")
@@ -60,6 +52,14 @@ end
 
 # Populate Tree view
 # http://python-gtk-3-tutorial.readthedocs.org/en/latest/treeview.html
+# iter = tree_store.append(nil) -- Already populated modeled
+renderer = Gtk::CellRendererText.new
+
+renderer = Gtk::CellRendererText.new
+column = Gtk::TreeViewColumn.new("Library", renderer, {
+	:text => 0,
+})
+tree_view.append_column(column)
 
 # Parse XML to list_store
 
