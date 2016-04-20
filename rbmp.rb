@@ -66,8 +66,9 @@ column = Gtk::TreeViewColumn.new("Library", renderer, {
 
 tree_view.append_column(column)
 
-# Parse XML to list_store
-
+# Parse XML to libt_store
+data_file = "~/Music/iTunes\ Music\ Library.xml"
+doc = File.open(File.expand_path(data_file)) { |f| Nokogiri::XML(f) }
 
 # Populate List view
 
