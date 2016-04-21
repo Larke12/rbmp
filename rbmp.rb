@@ -66,12 +66,35 @@ column = Gtk::TreeViewColumn.new("Library", renderer, {
 
 tree_view.append_column(column)
 
-# Parse XML to libt_store
-data_file = "~/Music/iTunes\ Music\ Library.xml"
-doc = File.open(File.expand_path(data_file)) { |f| Nokogiri::XML(f) }
+# Parse XML file
+# https://goo.gl/tPaQ8R
+list = []
+data_file = "~/Music/iTunes/iTunes\ Music\ Library.xml"
+@doc = File.open(File.expand_path(data_file)) { |f| Nokogiri::XML(f) }
+
+# Find each dictionary item and loop through it
+@doc.xpath('/plist/dict/dict/dict').each do |node|
+	hash     = {}
+	last_key = nil
+
+	# Stuff the key value pairs in to hash.  We know a key is followed by
+	# a value, so we'll just skip blank nodes, save the key, then when we
+	# find the value, add it to the hash
+	node.children.each do |child|
+		next if child.blank?
+
+		if child.name == 'key'
+			# Save off the key
+			last_key = child.text
+		else
+			# Use the key we saved
+			hash[last_key] = child.text
+		end
+	end
+	list << hash # push on to our list
+end
 
 # Populate List view
-
 
 # Play button debug
 play_butt = builder.get_object("play_butt")
