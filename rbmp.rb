@@ -95,6 +95,37 @@ data_file = "~/Music/iTunes/iTunes\ Music\ Library.xml"
 end
 
 # Populate List view
+# Name, Artist, Album
+model = Gtk::ListStore.new(String, String, String)
+
+list.each do |key, array|
+	# Parse each hash
+	model.append.set_values([key["Name"], key["Artist"], key["Album"]])
+end	
+
+song_view.set_model(model)
+
+renderer = Gtk::CellRendererText.new
+column = Gtk::TreeViewColumn.new("Name", renderer, {
+	:text => 0,
+})
+
+song_view.append_column(column)
+
+renderer = Gtk::CellRendererText.new
+column = Gtk::TreeViewColumn.new("Artist", renderer, {
+	:text => 1,
+})
+
+song_view.append_column(column)
+
+renderer = Gtk::CellRendererText.new
+column = Gtk::TreeViewColumn.new("Album", renderer, {
+	:text => 2,
+})
+
+song_view.append_column(column)
+
 
 # Play button debug
 play_butt = builder.get_object("play_butt")
