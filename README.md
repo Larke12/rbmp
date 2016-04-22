@@ -4,7 +4,7 @@ Inspired by KesieV Chiefs, a Ruby Media Player in 300 lines of code.
 
 ## Purpose
 
-The main purpose of RBMP is to show that a GTK3 Media Player and give the GNU/Linux and POSIX compliant user access to their iTunes Library XML file. This means that you could access the same music and simple playlists from Linux. This application will be designed following the new [X-App guidelines](http://segfault.linuxmint.com/2016/02/the-first-two-x-apps-are-ready/).
+The main purpose of RBMP is to show that a GTK3 Media Player can  give the GNU/Linux and POSIX compliant user access to their iTunes Library XML file. This means that you could access the same music and simple playlists from Linux. This application will be designed following the new [X-App guidelines](http://segfault.linuxmint.com/2016/02/the-first-two-x-apps-are-ready/), Cinnamon applications with simplistic design and purpose.
 
 ## Running
 
