@@ -126,12 +126,17 @@ column = Gtk::TreeViewColumn.new("Album", renderer, {
 
 song_view.append_column(column)
 
-
-# Play button debug
+# Play button 
 play_butt = builder.get_object("play_butt")
+image = Gtk::Image.new
+label = Gtk::Label.new
 play_butt.signal_connect "clicked" do
 	# play selected song
-	system('mpv --no-audio-display ~/Music/iTunes/iTunes\ Media/Music/Makoto\ Miyazaki/ONE\ PUNCH\ MAN\ ORIGINAL\ SOUNDTRACK\ \(ONE\ T/11\ Sonic.m4a &')
+	stock_name = "Gtk::Stock::MEDIA_STOP"
+	label.set_text("Stop")
+	image.set_stock(eval(stock_name))
+	#system('mpv --no-audio-display ~/Music/iTunes/iTunes\ Media/Music/Makoto\ Miyazaki/ONE\ PUNCH\ MAN\ ORIGINAL\ SOUNDTRACK\ \(ONE\ T/11\ Sonic.m4a &')
 end
+
 
 Gtk.main
