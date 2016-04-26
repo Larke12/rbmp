@@ -130,7 +130,8 @@ song_view.append_column(column)
 # Play button debug
 play_butt = builder.get_object("play_butt")
 play_butt.signal_connect "clicked" do
-	p "Play a song!"
+	# play selected song
+	system('mpv --no-audio-display ~/Music/iTunes/iTunes\ Media/Music/Makoto\ Miyazaki/ONE\ PUNCH\ MAN\ ORIGINAL\ SOUNDTRACK\ \(ONE\ T/11\ Sonic.m4a &')
 end
 
 Gtk.main
