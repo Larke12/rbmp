@@ -2,6 +2,7 @@
 
 require 'gtk3'
 require 'nokogiri'
+require 'gst'
 
 begin $notifies=require 'rnotify'; rescue LoadError; end
 
@@ -128,15 +129,19 @@ song_view.append_column(column)
 
 # Play button 
 play_butt = builder.get_object("play_butt")
-image = Gtk::Image.new
-label = Gtk::Label.new
+playbin = Gst::ElementFactory.make('playbin')
+playbin.ready
 play_butt.signal_connect "clicked" do
-	# play selected song
-	stock_name = "Gtk::Stock::MEDIA_STOP"
-	label.set_text("Stop")
-	image.set_stock(eval(stock_name))
-	#system('mpv --no-audio-display ~/Music/iTunes/iTunes\ Media/Music/Makoto\ Miyazaki/ONE\ PUNCH\ MAN\ ORIGINAL\ SOUNDTRACK\ \(ONE\ T/11\ Sonic.m4a &')
-end
+	if play_butt.label == "Play"
+		stock_name = "Gtk::Stock::MEDIA_STOP"
+		play_butt.label = "Stop"
 
+		playbin.uri = "file:///home/larke12/Music/iTunes/iTunes\ Media/Music/Makoto\ Miyazaki/ONE\ PUNCH\ MAN\ ORIGINAL\ SOUNDTRACK\ \(ONE\ T/11\ Sonic.m4a" 
+		playbin.play
+	else 
+		play_butt.label = "Play"
+		playbin.stop
+	end
+end
 
 Gtk.main
