@@ -218,7 +218,6 @@
             </child>
             <child>
               <object class="GtkVolumeButton" id="vol_slider">
-                <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="focus_on_click">False</property>
                 <property name="receives_default">True</property>

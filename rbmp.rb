@@ -4,8 +4,6 @@ require 'gtk3'
 require 'nokogiri'
 require 'gst'
 
-begin $notifies=require 'rnotify'; rescue LoadError; end
-
 # Construct the builder instance and load the UI description
 builder = Gtk::Builder.new
 builder.add_from_file('assets/rbmp.glade')
@@ -171,5 +169,9 @@ selection.signal_connect('changed') do |selection|
 	file_append = iter[3]
 	play_butt.label = "Play"
 end
+
+# Set volume 
+vol_slider = builder.get_object("vol_slider")
+
 
 Gtk.main
