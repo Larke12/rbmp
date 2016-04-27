@@ -96,12 +96,20 @@ data_file = "~/Music/iTunes/iTunes\ Music\ Library.xml"
 end
 
 # Populate List view
-# Name, Artist, Album
+# Name, Artist, Album, Location
 model = Gtk::ListStore.new(String, String, String)
+file_loc = Array[]
+i = 0
 
 list.each do |key, array|
+	# Clean up Location
+	file_loc.push(key["Location"].gsub(/(%20)/, '\ '))
+	tmp_par = file_loc[i].partition(/(\/Ryan's\\ Music\/)/)
+	file_loc[i] = tmp_par[2].gsub(/\(/, '\(')
+
 	# Parse each hash
-	model.append.set_values([key["Name"], key["Artist"], key["Album"]])
+	model.append.set_values([key["Name"], key["Artist"], key["Album"]]) 
+	i += 1
 end	
 
 song_view.set_model(model)
@@ -136,7 +144,8 @@ play_butt.signal_connect "clicked" do
 		stock_name = "Gtk::Stock::MEDIA_STOP"
 		play_butt.label = "Stop"
 
-		playbin.uri = "file:///home/larke12/Music/iTunes/iTunes\ Media/Music/Makoto\ Miyazaki/ONE\ PUNCH\ MAN\ ORIGINAL\ SOUNDTRACK\ \(ONE\ T/11\ Sonic.m4a" 
+		data_file = '~/Music/iTunes/iTunes\\ Media/' + file_loc[22] 
+		playbin.uri = File.open(File.expand_path(data_file))
 		playbin.play
 	else 
 		play_butt.label = "Play"
