@@ -97,8 +97,9 @@ end
 
 # Populate List view
 # Name, Artist, Album, Location
-model = Gtk::ListStore.new(String, String, String)
+model = Gtk::ListStore.new(String, String, String, String)
 file_loc = Array[]
+file_append = String.new
 i = 0
 
 list.each do |key, array|
@@ -108,7 +109,7 @@ list.each do |key, array|
 	file_loc[i] = tmp_par[2].gsub(/\(/, '\(')
 
 	# Parse each hash
-	model.append.set_values([key["Name"], key["Artist"], key["Album"]]) 
+	model.append.set_values([key["Name"], key["Artist"], key["Album"], file_loc[i].gsub(/\\/, "")]) 
 	i += 1
 end	
 
@@ -135,23 +136,37 @@ column = Gtk::TreeViewColumn.new("Album", renderer, {
 
 song_view.append_column(column)
 
+renderer = Gtk::CellRendererText.new
+column = Gtk::TreeViewColumn.new("Location", renderer, {
+	:text => 3,
+})
+
+song_view.append_column(column)
+
 # Play button 
 play_butt = builder.get_object("play_butt")
 playbin = Gst::ElementFactory.make('playbin')
 playbin.ready
 play_butt.signal_connect "clicked" do
 	if play_butt.label == "Play"
+		playbin.stop
 		stock_name = "Gtk::Stock::MEDIA_STOP"
 		play_butt.label = "Stop"
 
-		#playbin.uri = "file:///home/larke12/Music/iTunes/iTunes\ Media/Music/Makoto\ Miyazaki/ONE\ PUNCH\ MAN\ ORIGINAL\ SOUNDTRACK\ \(ONE\ T/11\ Sonic.m4a"
-		playbin.uri = "file:///home/larke12/Music/iTunes/iTunes Media/" + file_loc[22].gsub(/\\/, "")
+		playbin.uri = "file:///home/larke12/Music/iTunes/iTunes Media/" + file_append
 		puts playbin.uri
 		playbin.play
 	else 
 		play_butt.label = "Play"
 		playbin.stop
 	end
+end
+
+selection = song_view.selection
+selection.signal_connect('changed') do |selection|
+	iter = selection.selected
+	file_append = iter[3]
+	play_butt.label = "Play"
 end
 
 Gtk.main
