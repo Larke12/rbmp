@@ -149,19 +149,23 @@ playbin = Gst::ElementFactory.make('playbin')
 playbin.ready
 play_butt.signal_connect "clicked" do
 	if play_butt.label == "Play"
+		# Play a new song
 		playbin.stop
 		stock_name = "Gtk::Stock::MEDIA_STOP"
 		play_butt.label = "Stop"
 
+		# Play selected song
 		playbin.uri = "file:///home/larke12/Music/iTunes/iTunes Media/" + file_append
 		puts playbin.uri
 		playbin.play
 	else 
+		# Stop playing
 		play_butt.label = "Play"
 		playbin.stop
 	end
 end
 
+# Store selected song in variable for play button
 selection = song_view.selection
 selection.signal_connect('changed') do |selection|
 	iter = selection.selected
