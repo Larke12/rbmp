@@ -14,7 +14,7 @@ The main purpose of RBMP is to show that a GTK3 Media Player can  give the GNU/L
 
 This application currently requires the following gems 
 
-`gem install gtk3 nokogiri`
+`gem install gtk3 nokogiri gstreamer`
 
 ## Other Notes
 - [GTK+ Developer Docs](https://developer.gnome.org/gtk3/3.16/)
