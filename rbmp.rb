@@ -8,7 +8,7 @@ begin $notifies=require 'rnotify'; rescue LoadError; end
 
 # Construct the builder instance and load the UI description
 builder = Gtk::Builder.new
-builder.add_from_file('rbmp.glade')
+builder.add_from_file('assets/rbmp.glade')
 builder.connect_signals{|handler| method(handler)}
 
 # Link the main window to the quit event
