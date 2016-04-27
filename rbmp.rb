@@ -144,8 +144,9 @@ play_butt.signal_connect "clicked" do
 		stock_name = "Gtk::Stock::MEDIA_STOP"
 		play_butt.label = "Stop"
 
-		data_file = '~/Music/iTunes/iTunes\\ Media/' + file_loc[22] 
-		playbin.uri = File.open(File.expand_path(data_file))
+		#playbin.uri = "file:///home/larke12/Music/iTunes/iTunes\ Media/Music/Makoto\ Miyazaki/ONE\ PUNCH\ MAN\ ORIGINAL\ SOUNDTRACK\ \(ONE\ T/11\ Sonic.m4a"
+		playbin.uri = "file:///home/larke12/Music/iTunes/iTunes Media/" + file_loc[22].gsub(/\\/, "")
+		puts playbin.uri
 		playbin.play
 	else 
 		play_butt.label = "Play"
