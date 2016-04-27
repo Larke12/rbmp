@@ -156,7 +156,6 @@ play_butt.signal_connect "clicked" do
 
 		# Play selected song
 		playbin.uri = "file:///home/larke12/Music/iTunes/iTunes Media/" + file_append
-		puts playbin.uri
 		playbin.play
 	else 
 		# Stop playing
