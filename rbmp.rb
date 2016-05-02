@@ -46,6 +46,9 @@ close_butt.signal_connect "activate"  do
 	about_dial.destroy
 end
 
+# Initialize text box
+np_field = builder.get_object("now_playing_field")
+
 # Populate Tree view
 model = Gtk::TreeStore.new(String)
 
